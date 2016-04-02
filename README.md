@@ -2,7 +2,7 @@
 
 ##Installation
 * Clone the repo : `git clone https://github.com/jiteshjha/FOSSEE-Xcos-Task.git`
-* Install [Java8](http://askubuntu.com/questions/521145/how-to-install-oracle-java-on-ubuntu-14-04)
+* Install [Java 8](http://askubuntu.com/questions/521145/how-to-install-oracle-java-on-ubuntu-14-04)
 
 ### To run Part A
 #### To run Changing Properties Swing application
