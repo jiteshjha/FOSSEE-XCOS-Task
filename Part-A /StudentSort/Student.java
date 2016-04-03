@@ -84,35 +84,35 @@ public class Student implements Comparator<Student>{
 
   // Returns an integer value based on the comparison of two Student class objects.
   @Override
-	public int compare(Student s1, Student s2) {
-     // Compare total marks
-	   int compareStudent = new Float(s2.getTotal()).compareTo(new Float(s1.getTotal()));
+  public int compare(Student s1, Student s2) {
+    // Compare total marks
+    int compareStudent = new Float(s2.getTotal()).compareTo(new Float(s1.getTotal()));
 
-     // If total marks are same, compare language1 marks.
-     if(compareStudent == 0) {
-       compareStudent = new Float(s2.getLanguage1Marks()).compareTo(new Float(s1.getLanguage1Marks()));
-     }
-     // If language1 marks are same, compare language2 marks.
-     if(compareStudent == 0) {
-       compareStudent = new Float(s2.getLanguage2Marks()).compareTo(new Float(s1.getLanguage2Marks()));
-     }
-     // If language2 marks are same, compare math marks.
-     if(compareStudent == 0) {
-       compareStudent = new Float(s2.getMathMarks()).compareTo(new Float(s1.getMathMarks()));
-     }
-     // If math marks are same, compare science marks.
+    // If total marks are same, compare language1 marks.
     if(compareStudent == 0) {
-       compareStudent = new Float(s2.getScienceMarks()).compareTo(new Float(s1.getScienceMarks()));
+      compareStudent = new Float(s2.getLanguage1Marks()).compareTo(new Float(s1.getLanguage1Marks()));
+    }
+    // If language1 marks are same, compare language2 marks.
+    if(compareStudent == 0) {
+      compareStudent = new Float(s2.getLanguage2Marks()).compareTo(new Float(s1.getLanguage2Marks()));
+    }
+    // If language2 marks are same, compare math marks.
+    if(compareStudent == 0) {
+      compareStudent = new Float(s2.getMathMarks()).compareTo(new Float(s1.getMathMarks()));
+    }
+    // If math marks are same, compare science marks.
+    if(compareStudent == 0) {
+      compareStudent = new Float(s2.getScienceMarks()).compareTo(new Float(s1.getScienceMarks()));
     }
     // If science marks are same, compare environmental science marks.
     if(compareStudent == 0) {
-       compareStudent = new Float(s2.getEnvironmentalScienceMarks()).compareTo(new Float(s1.getEnvironmentalScienceMarks()));
+      compareStudent = new Float(s2.getEnvironmentalScienceMarks()).compareTo(new Float(s1.getEnvironmentalScienceMarks()));
     }
     // If the total marks and all individual subject marks are same, compare name.
     if(compareStudent == 0) {
       compareStudent = s1.getName().compareTo(s2.getName());
     }
-    // return resultant value.
-	  return compareStudent;
-	}
+    // Return resultant value.
+    return compareStudent;
+  }
 }
