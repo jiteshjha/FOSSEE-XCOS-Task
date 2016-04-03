@@ -82,7 +82,7 @@ public class Student implements Comparator<Student>{
                 "\nEnvironmental Science: " + getEnvironmentalScienceMarks() + "\n";
   }
 
-  // Returns an integer value based on the comparison output of two Student class objects.
+  // Returns an integer value based on the comparison of two Student class objects.
   @Override
 	public int compare(Student s1, Student s2) {
      // Compare total marks
