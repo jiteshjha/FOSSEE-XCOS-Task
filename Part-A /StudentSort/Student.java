@@ -12,7 +12,7 @@ import java.util.Comparator;
  * Creates a Student Class.
  * Constructor : Student(int, String, float, float, float, float, float)
  * toString() -> Description of the Student Class instance.
- * compare(Student, Student) -> returns an integer value indicating the result of a compare
+ * compare(Student, Student) -> returns an integer value indicating the result of a compare operation
  *                              between two Student objects in the order :
  *                              total marks, language1 marks, language2 marks, math marks, science marks, environmentalScience marks, name.
  */
