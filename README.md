@@ -19,5 +19,4 @@ java version "1.8.0_77"
 * `javac -d . Student.java`
 * `javac -d . StudentSorterMain.java`
 * `java studentsorter.StudentSorterMain`
-`
 
