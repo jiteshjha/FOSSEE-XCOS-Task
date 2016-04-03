@@ -29,6 +29,8 @@ import javax.swing.JColorChooser;
 
 /**
  * Creates a custom dialog box to change properties of a label.
+ * Input : Import the class, create an PropertiesDialog, and set visibility to true.
+ * Output : Returns name, backgroundColor and fontColor throught get methods if values entered, or null for unchanged values.
  */
 
 public class PropertiesDialog extends JDialog {
