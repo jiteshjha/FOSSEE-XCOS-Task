@@ -1,5 +1,8 @@
 # FOSSEE-Xcos-Task
 
+java version "1.8.0_77"
+
+
 ##Installation
 * Clone the repo : `git clone https://github.com/jiteshjha/FOSSEE-Xcos-Task.git`
 * Install [Java 8](http://askubuntu.com/questions/521145/how-to-install-oracle-java-on-ubuntu-14-04)
