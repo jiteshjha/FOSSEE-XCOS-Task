@@ -87,7 +87,7 @@ public class StudentSorterMain {
         System.out.println("Invalid input!\nPlease try again:");
 	// Consume bad input
 	scanner.next();
-	// Continue the loop.
+	// Continue the loop again.
 	continue;
       }
 
