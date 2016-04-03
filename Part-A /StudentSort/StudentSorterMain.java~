@@ -97,7 +97,7 @@ public class StudentSorterMain {
     }
     // Sort students list with the compare method defined in Student.
     Collections.sort(students, new Student());
-    // Display the rank list.
+    // Display the sorted records.
     System.out.println("\nRank list:\n");
     int i = 1;
     for(Student temp: students) {

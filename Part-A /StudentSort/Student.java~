@@ -110,7 +110,7 @@ public class Student implements Comparator<Student>{
     }
     // If the total marks and all individual subject marks are same, compare name.
     if(compareStudent == 0) {
-      compareStudent = s1.getName().compareTo(s2.getName());
+      compareStudent = s2.getName().compareTo(s1.getName());
     }
     // return resultant value.
 	  return compareStudent;
