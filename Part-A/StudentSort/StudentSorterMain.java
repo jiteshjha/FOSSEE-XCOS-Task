@@ -125,8 +125,10 @@ public class StudentSorterMain {
   public static void main(String[] args) {
     // answer variable is used to take input from the user as a 'y' or 'n'(yes or no).
     char answer;
-		// maxMarks variable is used to store maximum marks from the user.
+    // maxMarks variable is used to store maximum marks from the user.
     float maxMarks;
+    // rank variable is used to store rank integer values, beginning from 1.
+    int rank = 1;
     // Create ArrayList to store Student objects.
     ArrayList<Student> students = new ArrayList<Student>();
     //Get the Student records.
@@ -192,9 +194,8 @@ public class StudentSorterMain {
     // Display the rank list.
     System.out.println("\nRank list:\n");
 
-    int i = 1;
     for(Student temp: students) {
-      System.out.println("Rank : "+(i++));
+      System.out.println("Rank : "+(rank++));
       System.out.println(temp);
     }
   }
