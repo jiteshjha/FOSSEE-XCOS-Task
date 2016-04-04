@@ -24,13 +24,13 @@ import java.util.InputMismatchException;
  * Output: Returns a string description for the exception and the cause.
  */
 class MarksOutOfBoundsException extends Exception {
- private float marks;
- MarksOutOfBoundsException(float a) {
-  marks = a;
- }
- public String toString() {
-  return "Input marks out of bounds!\nYour input : " + marks;
- }
+  private float marks;
+  MarksOutOfBoundsException(float a) {
+    marks = a;
+  }
+  public String toString() {
+    return "Input marks out of bounds!\nYour input : " + marks;
+  }
 }
 
 /**
@@ -39,13 +39,13 @@ class MarksOutOfBoundsException extends Exception {
  * Output: Returns a string description for the exception and the cause.
  */
 class IncorrectNameException extends Exception {
- private String name;
- IncorrectNameException(String a) {
-  name = a;
- }
- public String toString() {
-  return "Input name contains an digit!\nYour input : " + name;
- }
+  private String name;
+  IncorrectNameException(String a) {
+    name = a;
+  }
+  public String toString() {
+    return "Input name contains an digit!\nYour input : " + name;
+  }
 }
 
 
@@ -54,9 +54,9 @@ public class StudentSorterMain {
   private static Scanner scanner = new Scanner(System.in);
 
   // getRecord(float maxMarks) interacts with the user to get a Student's field values.
-	// Input: maximum marks passed as a parameter.
+  // Input: maximum marks passed as a parameter.
   // Output: Returns Student object.
-	// Exception(s): Throws MarksOutOfBoundsException, IncorrectNameException
+  // Exception(s): Throws MarksOutOfBoundsException, IncorrectNameException
   private static Student getRecord(float maxMarks) throws MarksOutOfBoundsException, IncorrectNameException {
     // Create field variables to store values.
     int rollNumber;
