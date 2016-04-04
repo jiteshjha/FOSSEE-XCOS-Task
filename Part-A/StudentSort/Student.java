@@ -1,7 +1,7 @@
 /**
  * @author Jitesh Kumar Jha
  * @email jiteshjha96@gmail.com
- * Last Updated : 03 April 2016
+ * Last Updated : 04 April 2016
  */
 
 package studentsorter;
@@ -31,7 +31,7 @@ public class Student implements Comparator<Student>{
   public Student() {
 
   }
-  //Creates an Student object with the given values.
+  // Creates an Student object with the given values.
   public Student(int rollNumber, String name, float language1, float language2, float math, float science, float environmentalScience) {
     this.rollNumber = rollNumber;
     this.name = name;
@@ -79,7 +79,8 @@ public class Student implements Comparator<Student>{
                 "\nLanguage2: " + getLanguage2Marks() +
                 "\nMath: " + getMathMarks() +
                 "\nScience: " + getScienceMarks() +
-                "\nEnvironmental Science: " + getEnvironmentalScienceMarks() + "\n";
+                "\nEnvironmental Science: " + getEnvironmentalScienceMarks() +
+                "\nTotal marks: " + getTotal() + "\n";
   }
 
   // Returns an integer value based on the comparison of two Student class objects.
