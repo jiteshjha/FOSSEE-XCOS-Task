@@ -24,13 +24,13 @@ import java.util.InputMismatchException;
  * Output: Returns a string description for the exception and the cause.
  */
 class MarksOutOfBoundsException extends Exception {
-	private float marks;
-	MarksOutOfBoundsException(float a) {
-		marks = a;
-	}
-	public String toString() {
-		return "Input marks out of bounds!\nYour input : " + marks;
-	}
+ private float marks;
+ MarksOutOfBoundsException(float a) {
+  marks = a;
+ }
+ public String toString() {
+  return "Input marks out of bounds!\nYour input : " + marks;
+ }
 }
 
 /**
@@ -39,13 +39,13 @@ class MarksOutOfBoundsException extends Exception {
  * Output: Returns a string description for the exception and the cause.
  */
 class IncorrectNameException extends Exception {
-	private String name;
-	IncorrectNameException(String a) {
-		name = a;
-	}
-	public String toString() {
-		return "Input name contains an digit!\nYour input : " + name;
-	}
+ private String name;
+ IncorrectNameException(String a) {
+  name = a;
+ }
+ public String toString() {
+  return "Input name contains an digit!\nYour input : " + name;
+ }
 }
 
 
@@ -71,17 +71,17 @@ public class StudentSorterMain {
     // Consume bad input.
     scanner.nextLine();
     name = scanner.nextLine();
-		// Source : http://stackoverflow.com/questions/6344867/checking-whether-a-string-contains-a-number-value-in-java
-		// If name contains any digit, throw IncorrectNameException exception.
-		if(name.matches(".*\\d.*")){
-			throw new IncorrectNameException(name);
+    // Source : http://stackoverflow.com/questions/6344867/checking-whether-a-string-contains-a-number-value-in-java
+    // If name contains any digit, throw IncorrectNameException exception.
+    if(name.matches(".*\\d.*")){
+     throw new IncorrectNameException(name);
     }
 
     System.out.println("Enter the following marks:");
     System.out.print("Language1\n> ");
     language1 = scanner.nextFloat();
 
-		// If Language1 marks out of bounds, throw MarksOutOfBoundsException exception.
+    // If Language1 marks out of bounds, throw MarksOutOfBoundsException exception.
     if(language1 < 0 || language1 > maxMarks) {
       throw new MarksOutOfBoundsException(language1);
     }
@@ -89,32 +89,32 @@ public class StudentSorterMain {
     System.out.print("Language2\n> ");
     language2 = scanner.nextFloat();
 
-		// If Language2 marks out of bounds, throw MarksOutOfBoundsException exception.
-		if(language2 < 0 || language2 > maxMarks) {
+    // If Language2 marks out of bounds, throw MarksOutOfBoundsException exception.
+    if(language2 < 0 || language2 > maxMarks) {
       throw new MarksOutOfBoundsException(language2);
     }
 
     System.out.print("Math\n> ");
     math = scanner.nextFloat();
 
-		// If Math marks out of bounds, throw MarksOutOfBoundsException exception.
-		if(math < 0 || math > maxMarks) {
+    // If Math marks out of bounds, throw MarksOutOfBoundsException exception.
+    if(math < 0 || math > maxMarks) {
       throw new MarksOutOfBoundsException(math);
     }
 
     System.out.print("Science\n> ");
     science = scanner.nextFloat();
 
-		// If Science marks out of bounds, throw MarksOutOfBoundsException exception.
-		if(science < 0 || science > maxMarks) {
+    // If Science marks out of bounds, throw MarksOutOfBoundsException exception.
+    if(science < 0 || science > maxMarks) {
       throw new MarksOutOfBoundsException(science);
     }
 
     System.out.print("Environmental Science\n> ");
     environmentalScience = scanner.nextFloat();
 
-		// If Environmental Science marks out of bounds, throw MarksOutOfBoundsException exception.
-		if(environmentalScience < 0 || environmentalScience > maxMarks) {
+    // If Environmental Science marks out of bounds, throw MarksOutOfBoundsException exception.
+    if(environmentalScience < 0 || environmentalScience > maxMarks) {
       throw new MarksOutOfBoundsException(environmentalScience);
     }
 
@@ -148,16 +148,15 @@ public class StudentSorterMain {
         i--;
       } catch(MarksOutOfBoundsException e) {
         // Will display the result from overriden toString() method.
-				System.out.println(e);
+    	System.out.println(e);
         // If input marks invalid, go back one loop and try to get the Student record again.
         i--;
+      } catch(IncorrectNameException e) {
+	// Will display the result from overriden toString() method.
+	System.out.println(e);
+	// If input name invalid, go back one loop and try to get the Student record again.
+	i--;
       }
-				catch(IncorrectNameException e) {
-				// Will display the result from overriden toString() method.
-				System.out.println(e);
-	      // If input name invalid, go back one loop and try to get the Student record again.
-	      i--;
-			}
     }
 
     // At this point, ArrayList has 5 Student objects.
@@ -174,17 +173,17 @@ public class StudentSorterMain {
         students.add(temp);
       } catch(InputMismatchException e) {
         System.out.println("Invalid input!\nPlease try again:");
-	      // Consume bad input
-	      scanner.next();
-	      // Continue the loop.
-	      continue;
+	// Consume bad input
+	scanner.next();
+	// Continue the loop.
+	continue;
       } catch(MarksOutOfBoundsException e) {
-          // Will display the result from overriden toString() method.
-					System.out.println(e);
+        // Will display the result from overriden toString() method.
+	System.out.println(e);
       }	catch(IncorrectNameException e) {
-					// Will display the result from overriden toString() method.
-					System.out.println(e);
-			}
+	// Will display the result from overriden toString() method.
+	System.out.println(e);
+      }
     }
 
     // Sort students list with the compare method defined in Student.
