@@ -22,5 +22,6 @@ Install [Java 8](https://java.com/en/download/help/windows_manual_download.xml) 
 * `java studentsorter.StudentSorterMain`
 
 ### To run Part B
-* `cd FOSSEE-Xcos-Task/Part-B/maxgraph`
-* Open `graph.html` in Firefox/Chrome/Safari.
+* `cd FOSSEE-Xcos-Task/Part-B/mxgraph`
+* Open `graph.html` in Firefox/Chrome/Safari [*For Windows*].
+* `xdg-open graph.html` [*For Ubuntu*]
