@@ -1,0 +1,78 @@
+<html>
+<head>
+	<title>Xcos on Browser - Sample graph</title>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="js/mxClient.js"></script>
+
+	<script type="text/javascript">
+		function main(container)
+		{
+			// Checks if the browser is supported
+			if (!mxClient.isBrowserSupported())
+			{
+				// Displays an error message if the browser is not supported.
+				mxUtils.error('Browser is not supported!', 200, false);
+			}
+			else
+			{
+				// Creates the graph inside the given container
+				var graph = new mxGraph(container);
+				// Disables moving of edge labels in this examples
+				graph.edgeLabelsMovable = false;
+        		// Larger grid size yields cleaner layout result
+				graph.gridSize = 40;
+				// Enables rubberband selection
+				new mxRubberband(graph);
+
+				// Needs to set a flag to check for dynamic style changes,
+				// that is, changes to styles on cells where the style was
+				// not explicitely changed using mxStyleChange
+				graph.getView().updateStyle = true;
+
+				// Gets the default parent for inserting new cells. This
+				// is normally the first child of the root (ie. layer 0).
+				var parent = graph.getDefaultParent();
+
+
+				// Adds cells to the model in a single step
+				graph.getModel().beginUpdate();
+				try
+				{
+					var v1 = graph.insertVertex(parent, null, '1', 50, 80, 80, 30, 'shape=image;image=images/icons/TIME_f.png;verticalLabelPosition=top;verticalAlign=bottom');
+					var v2 = graph.insertVertex(parent, null, '2', 200, 80, 80, 30, 'shape=image;image=images/icons/COSBLK_f.png;verticalLabelPosition=top;verticalAlign=bottom');
+          			var n1 = graph.insertVertex(parent, null, '', 160, 92, 6, 6, 'shape=image;image=images/icons/node.png;verticalLabelPosition=top;verticalAlign=bottom');
+          			var v1en1 = graph.insertEdge(parent, null, '', v1, n1, 'perimeterSpacing=-12;labelBackgroundColor=white;fontStyle=1');
+          			var n1ev2 = graph.insertEdge(parent, null, '', n1, v2, 'perimeterSpacing=-12;labelBackgroundColor=white;fontStyle=1');
+          			var v3 = graph.insertVertex(parent, null, '3', 200, 140, 80, 30, 'shape=image;image=images/icons/SINBLK_f.png;verticalLabelPosition=bottom;verticalAlign=top');
+          			var n1ev3 = graph.insertEdge(parent, null, 'A', n1, v3, 'perimeterSpacing=-15;labelBackgroundColor=white;fontStyle=1;verticalAlign=top;edgeStyle=elbowEdgeStyle;elbow=horizontal;');
+          			var v4 = graph.insertVertex(parent, null, '5', 400, 75, 70, 90, 'shape=image;image=images/icons/CANIMXY3D.png');
+          			var n2 = graph.insertVertex(parent, null, '', 320, 92, 6, 6, 'shape=image;image=images/icons/node.png;verticalLabelPosition=top;verticalAlign=bottom');
+          			var v2en2 = graph.insertEdge(parent, null, '', v2, n2, 'perimeterSpacing=-12;labelBackgroundColor=white;fontStyle=1');
+          			var n2ev4 = graph.insertEdge(parent, null, '', n2, v4, 'perimeterSpacing=3;labelBackgroundColor=white;fontStyle=1');
+          			var v3ev4 = graph.insertEdge(parent, null, '', v3, v4, 'perimeterSpacing=-4;labelBackgroundColor=white;fontStyle=1');
+          			var n3 = graph.insertVertex(parent, null, '', 322, 120, 1, 1, 'shape=image;image=images/icons/node.png;verticalLabelPosition=top;verticalAlign=bottom');
+          			var n2en3 = graph.insertEdge(parent, null, '', n2, n3, 'perimeterSpacing=-12;labelBackgroundColor=white;fontStyle=1');
+          			var n3ev4 = graph.insertEdge(parent, null, 'B', n3, v4, 'perimeterSpacing=-1;labelBackgroundColor=white;fontStyle=1');
+          			var v5 = graph.insertVertex(parent, null, '4', 400, 35, 80, 30, 'shape=image;image=images/icons/CLOCK_c.png;labelPosition=top;align=left');
+          			var v5ev4 = graph.insertEdge(parent, null, '', v5, v4, 'perimeterSpacing=-9;labelBackgroundColor=white;fontStyle=1;fillColor=#FF0000;');
+        		}
+				finally
+				{
+					// Updates the display
+					graph.getModel().endUpdate();
+				}
+			}
+		};
+	</script>
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+<body onload="main(document.getElementById('graphContainer'))">
+
+	<!-- Creates a container for the graph with a grid wallpaper -->
+	<div id="graphContainer"
+		style="overflow:hidden;width:500px;height:300px;background:url('editors/images/grid.gif')">
+	</div>
+</body>
+</html>
