@@ -23,5 +23,5 @@ Install [Java 8](https://java.com/en/download/help/windows_manual_download.xml) 
 
 ### To run Part B
 * `cd FOSSEE-Xcos-Task/Part-B/mxgraph`
-* Open `graph.html` in Firefox/Chrome/Safari [*For Windows*].
-* `xdg-open graph.html` [*For Ubuntu*]
+* Open `graph.html` in Firefox/Chrome/Safari [**For Windows**].
+* `xdg-open graph.html` [**For Ubuntu**]
