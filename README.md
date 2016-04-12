@@ -22,6 +22,17 @@ Install [Java 8](https://java.com/en/download/help/windows_manual_download.xml) 
 * `java studentsorter.StudentSorterMain`
 
 ### To run Part B
-* `cd FOSSEE-Xcos-Task/Part-B/mxgraph`
-* Open `graph.html` in Firefox/Chrome/Safari [**For Windows**].
-* `xdg-open graph.html` [**For Ubuntu**]
+
+#### To open the expected diagram
+* `cd FOSSEE-Xcos-Task/Part B/Task`
+* Open `task.html` in Firefox/Chrome/Safari [**For Windows**].
+* `xdg-open task.html` [**For Ubuntu**]
+
+#### To open the Xcos web editor used to create the aforementioned diagram.
+* `cd FOSSEE-Xcos-Task/Part B/Examples`
+* Open `webeditor.html` in Firefox/Chrome/Safari [**For Windows**].
+* `xdg-open webeditor.html` [**For Ubuntu**]
+
+##### OR
+
+Xcos web editor hosted on BitBalloon [here](xcos-web-editor.bitballoon.com) for ease.
