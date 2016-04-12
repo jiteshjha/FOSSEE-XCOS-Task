@@ -40,5 +40,5 @@ Install [Java 8](https://java.com/en/download/help/windows_manual_download.xml) 
 
 **Note:**
 Additional tasks for Part B - 
-- [X] Draw the Connections labelled 'A' and 'B'. [Reflected in task.html]
-- [x] Double Click the Animated Viewer and open a small window asking for inputs. [Reflected in webeditor.html]
+- [X] Draw the Connections labelled 'A' and 'B'. [Reflected in **task.html**]
+- [x] Double Click the Animated Viewer and open a small window asking for inputs. [Reflected in **webeditor.html**]

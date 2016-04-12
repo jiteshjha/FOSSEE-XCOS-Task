@@ -190,6 +190,11 @@
 				// Shows a "modal" window when double clicking a vertex.
 				graph.dblClick = function(evt, cell)
 				{
+					// Get the name of the block.
+					// NOTE: Change the regex function to suit your palettes files on the change of image directory.
+					// NOTE: This regex function works when all the palettes are contained in the icons48 folder.
+					var blockName = this.convertValueToString(cell).match("/icons48/(.*?).png")[1];
+					
 					// Do not fire a DOUBLE_CLICK event here as mxEditor will
 					// consume the event and start the in-place editor.
 					if (this.isEnabled() &&
@@ -202,7 +207,8 @@
 						{
 							this.startEditingAtCell(cell);
 						}
-						else
+						// If the name of the cell block is 'CANIMXY3D', then show the modal window.
+						if(blockName.localeCompare("CANIMXY3D") == 0)
 						{
 							// 'Set Scope Parameters' modal window code starts here:
 
