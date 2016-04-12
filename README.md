@@ -29,10 +29,16 @@ Install [Java 8](https://java.com/en/download/help/windows_manual_download.xml) 
 * `xdg-open task.html` [**For Ubuntu**]
 
 #### To open the Xcos web editor used to create the aforementioned diagram.
+##### Follow these steps:
 * `cd FOSSEE-Xcos-Task/Part B/Examples`
 * Open `webeditor.html` in Firefox/Chrome/Safari [**For Windows**].
 * `xdg-open webeditor.html` [**For Ubuntu**]
 
 ##### OR
 
-Xcos web editor hosted on BitBalloon [here](xcos-web-editor.bitballoon.com) for ease.
+* Xcos web editor hosted on BitBalloon [here](https://xcos-web-editor.bitballoon.com) for ease.
+
+**Note:**
+Additional tasks for Part B - 
+- [X] Draw the Connections labelled 'A' and 'B'. [Reflected in task.html]
+- [x] Double Click the Animated Viewer and open a small window asking for inputs. [Reflected in webeditor.html]
