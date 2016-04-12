@@ -204,9 +204,264 @@
 						}
 						else
 						{
+							// 'Set Scope Parameters' modal window code starts here:
+
+							// Create basic structure for the form.
 							var content = document.createElement('div');
-							content.innerHTML = this.convertValueToString(cell);
-							showModalWindow(this, 'Properties', content, 400, 300);
+							content.style.cssText = 'border-style: solid;border-width: 1px;margin:10px 10px 10px 10px';
+
+							// Heading of content.
+							var heading = document.createElement('h2');
+							heading.innerHTML = "Set Scope Parameters";
+							heading.style.cssText = 'padding-left:2pc;';
+							content.appendChild(heading);
+
+							// Add Form.
+							var myform = document.createElement("form");
+   							myform.method = "post";
+							myform.style.cssText = 'margin-right:2pc;margin-left:2pc;margin-bottom:2pc;';
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Number of curves";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = 1;
+    						input.name = "numberOfCurves";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var namelabel = document.createElement('label'); // Create Label for Name Field
+							namelabel.innerHTML = "color (>0) or mark(<0)"; // Set Field Labels
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [1,2,3,4,5,6,7,13];
+    						input.name = "colorOrMark";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "line or mark size";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [1,1,1,1,1,1,1,1];
+    						input.name = "lineOrMarkSize";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Output window number(-1 for automatic)";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = -1;
+    						input.name = "outputWindowNumber";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Output window position";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [];
+    						input.name = "outputWindowPosition";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Output window sizes";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [];
+    						input.name = "outputWindowSize";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Xmin and Xmax";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [-15, 15];
+    						input.name = "xminAndXmax";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Ymin and Ymax";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [-15, 15];
+    						input.name = "yminAndYmax";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Zmin and Zmax";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [-15, 15];
+    						input.name = "zminAndZmax";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Aplha and Theta";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = [50, 280];
+    						input.name = "alphaAndTheta";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Buffer size";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = 2;
+    						input.name = "bufferSize";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Button - Submit.
+							var btn = document.createElement("BUTTON");
+							btn.innerHTML = 'Submit';
+							myform.appendChild(btn);
+
+							// Button - Submit.
+							var btn = document.createElement("BUTTON");
+							btn.innerHTML = 'Cancel';
+							btn.style.cssText='float:right;';
+							myform.appendChild(btn);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							content.appendChild(myform);
+							showModalWindow(this, 'Scilab Multiple Values Request', content, 450, 432);
 						}
 					}
 
