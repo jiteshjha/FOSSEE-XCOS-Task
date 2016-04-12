@@ -24,13 +24,13 @@ Install [Java 8](https://java.com/en/download/help/windows_manual_download.xml) 
 ### To run Part B
 
 #### To open the expected diagram
-* `cd FOSSEE-Xcos-Task/Part B/Task`
+* `cd FOSSEE-Xcos-Task/Part-B/Task`
 * Open `task.html` in Firefox/Chrome/Safari [**For Windows**].
 * `xdg-open task.html` [**For Ubuntu**]
 
 #### To open the Xcos web editor used to create the aforementioned diagram.
 ##### Follow these steps:
-* `cd FOSSEE-Xcos-Task/Part B/Examples`
+* `cd FOSSEE-Xcos-Task/Part-B/Examples`
 * Open `webeditor.html` in Firefox/Chrome/Safari [**For Windows**].
 * `xdg-open webeditor.html` [**For Ubuntu**]
 
