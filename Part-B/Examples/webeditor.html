@@ -190,10 +190,6 @@
 				// Shows a "modal" window when double clicking a vertex.
 				graph.dblClick = function(evt, cell)
 				{
-					// Get the name of the block.
-					// NOTE: Change the regex function to suit your palettes files on the change of image directory.
-					// NOTE: This regex function works when all the palettes are contained in the icons48 folder.
-
 					// Do not fire a DOUBLE_CLICK event here as mxEditor will
 					// consume the event and start the in-place editor.
 					if (this.isEnabled() &&
@@ -209,9 +205,17 @@
 						// If the name of the cell block is 'CANIMXY3D', then show the modal window.
 
 						// Get the name of the block and compare it with 'CANIMXY3D'.
-						// NOTE: Change the regex function to suit your palettes files on the change of image directory.
-						// NOTE: This regex function works when all the palettes are contained in the icons48 folder.
-						if((this.convertValueToString(cell).match("/icons48/(.*?).png")[1]).localeCompare("CANIMXY3D") == 0)
+						// Works with any URL.
+
+						// Directions:
+						// cell.value = image path of the cell block.
+						// First split the path String with '/', pop the path section preceding filename.
+						// Then, get the filename with REGEX using match()
+						// match() will return 2 strings, one with file extention and one without it.
+						// pop the string with file extension, the result will be the block name.
+
+						var name = cell.value.split('/').pop().match("(.*?).png").pop();
+						if((name.localeCompare("CANIMXY3D") == 0))
 						{
 							// 'Set Scope Parameters' modal window code starts here:
 
