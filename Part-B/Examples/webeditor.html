@@ -212,14 +212,9 @@
 						// Get the name of the block and compare it with '3DSCOPE'.
 						// Works with any URL.
 
-						// Directions:
-						// cell.value = image path of the cell block.
-						// First split the path String with '/', pop the path section preceding filename.
-						// Then, get the filename with REGEX using match()
-						// match() will return 2 strings, one with file extention and one without it.
-						// pop the string with file extension, the result will be the block name.
-						var name = cell.value.split('/').pop().match("(.*?).svg").pop();
-						
+						// Get the name of the block from the image URl.
+						// Source: http://stackoverflow.com/questions/3671522/regex-capture-filename-from-url-without-file-extention
+						var name =  cell.value.substring(cell.value.lastIndexOf("/") + 1, cell.value.lastIndexOf("."));
 						if((name.localeCompare("3DSCOPE") == 0))
 						{
 							// source : http://api.jquery.com/jQuery.grep/
