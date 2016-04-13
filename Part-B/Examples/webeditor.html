@@ -213,9 +213,10 @@
 						// Then, get the filename with REGEX using match()
 						// match() will return 2 strings, one with file extention and one without it.
 						// pop the string with file extension, the result will be the block name.
-
-						var name = cell.value.split('/').pop().match("(.*?).png").pop();
-						if((name.localeCompare("CANIMXY3D") == 0))
+						console.log(cell);
+						var name = cell.value.split('/').pop().match("(.*?).svg").pop();
+						alert(name);
+						if((name.localeCompare("3DSCOPE") == 0))
 						{
 							// 'Set Scope Parameters' modal window code starts here:
 
@@ -495,22 +496,14 @@
 				// be used. For example, the first call to addSidebar icon would
 				// be as follows:
 				// addSidebarIcon(graph, sidebar, 'Website', 'images/icons48/earth.png');
-                addSidebarIcon(graph, sidebar,
-					'<img src="images/icons48/COSBLK_f.png" width="57" height="41">',
-					'images/icons48/COSBLK_f.png');
-				addSidebarIcon(graph, sidebar,
-					'<img src="images/icons48/SINBLK_f.png" width="57" height="41">',
-					'images/icons48/SINBLK_f.png');
+                addSidebarIcon(graph, sidebar,'SINBLK_f','images/icons/SINBLK_f.png');
+				addSidebarIcon(graph, sidebar,'COSBLK_f','images/icons/COSBLK_f.png');
 
+				addSidebarIcon(graph, sidebar,'TIME_f','images/icons/TIME_f.png');
+				addSidebarIcon(graph, sidebar,'CANIMXY3D','images/icons/CANIMXY3D.png');
 				addSidebarIcon(graph, sidebar,
-					'<img src="images/icons48/TIME_f.png" width="49" height="41">',
-					'images/icons48/TIME_f.png');
-				addSidebarIcon(graph, sidebar,
-					'<img src="images/icons48/CANIMXY3D.png" width="49" height="49">',
-					'images/icons48/CANIMXY3D.png');
-				addSidebarIcon(graph, sidebar,
-					'<img src="images/icons48/CLOCK_c.png" width="41" height="49">',
-					'images/icons48/CLOCK_c.png');
+					'CLOCK_c',
+					'images/icons/CLOCK_c.png');
 
 				// Displays useful hints in a small semi-transparent box.
 				var hints = document.createElement('div');
@@ -698,6 +691,7 @@
 			wnd.setVisible(true);
 		};
 
+
         function addSidebarIcon(graph, sidebar, label, image)
 		{
 			// Create a temporary image file to retrieve width and height of the image later in the function.
@@ -722,72 +716,85 @@
 					// as follows: v1 = graph.insertVertex(parent, null, label,
 					// pt.x, pt.y, 120, 120, 'image=' + image);
 
-					// Get the name of the block from the image URl.
-					// Source: http://stackoverflow.com/questions/3671522/regex-capture-filename-from-url-without-file-extention
-
-                    var name =  image.substring(image.lastIndexOf("/") + 1, image.lastIndexOf("."));
-					// Create a vertex with the given image's height and width, and set opacity to 0.
-					v1 = graph.insertVertex(parent, null, label, x, y, imgTemp.width, imgTemp.height, 'opacity=0');
-					v1.setConnectable(false);
-
 					// If the select block name is 'COSBLK_f', add the corresponding input and output ports.
-					if(name.localeCompare("COSBLK_f") == 0) {
-						// Adds the ports at various relative locations.
-						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 16, 16,
-								'port;align=right;imageAlign=right;spacingRight=18', true);
-						port.geometry.offset = new mxPoint(-6, -8);
+					if (label.localeCompare("COSBLK_f") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, 'COS', x, y, 50, 50, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
 
-						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 16, 16,
-								'port;spacingLeft=18', true);
-						port.geometry.offset = new mxPoint(-8, -8);
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(0, -6);
 					}
 
 					// If the select block name is 'SINBLK_f', add the corresponding input and output ports.
-					else if(name.localeCompare("SINBLK_f") == 0) {
-						// Adds the ports at various relative locations.
-						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 16, 16,
-								'port;align=right;imageAlign=right;spacingRight=18', true);
-						port.geometry.offset = new mxPoint(-6, -8);
+					else if(label.localeCompare("SINBLK_f") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, 'SIN', x, y, 50, 50, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
 
-						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 16, 16,
-								'port;spacingLeft=18', true);
-						port.geometry.offset = new mxPoint(-8, -8);
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(0, -6);
 					}
 
-					// If the select block name is 'SINBLK_f', add the corresponding input ports.
-					else if(name.localeCompare("CANIMXY3D") == 0) {
+					// If the select block name is 'CANIMXY3D', add the corresponding input ports.
+					else if(label.localeCompare("CANIMXY3D") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, '<img src="images/icons/3DSCOPE.svg" width="41" height="49">', x, y, 50, 100, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
 						// Adds the ports at various relative locations.
-						var port = graph.insertVertex(v1, null, 'Input', 0, 0.33, 5, 5,
-								'port;align=right;spacingRight=18', true);
-						port.geometry.offset = new mxPoint(-1, -1);
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.3, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
 
-						var port = graph.insertVertex(v1, null, 'Input', 0, 0.66, 5, 5,
-								'port;align=right;spacingRight=18', true);
-						port.geometry.offset = new mxPoint(-1, -8);
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
 
-						var port = graph.insertVertex(v1, null, 'Input', 0, 0.99, 5, 5,
-								'port;align=right;spacingRight=18', true);
-						port.geometry.offset = new mxPoint(-1, -13);
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.7, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
 
-						var port = graph.insertVertex(v1, null, 'Input', 0.5, 0, 5, 5,
-								'port;align=right;spacingRight=18', true);
-						port.geometry.offset = new mxPoint(2, -1);
+						var port = graph.insertVertex(v1, null, 'Input', 0.5, 0, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=red;strokeColor=red;gradientColor=red;rotation=90', true);
+						port.geometry.offset = new mxPoint(-5, -10);
+					}
+
+					// If the select block name is 'TIME_f', add the corresponding output port.
+					else if(label.localeCompare("TIME_f") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, '<img src="images/icons/CLOCK_f.svg" width="41" height="49">', x, y, 49, 52, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(0, -6);
 					}
 
 					// If the select block name is 'SINBLK_f', add the corresponding output port.
-					else if(name.localeCompare("TIME_f") == 0) {
-						// Adds the ports at various relative locations.
-						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 16, 16,
-								'port;spacingLeft=18', true);
-						port.geometry.offset = new mxPoint(-8, -8);
-					}
+					else if(label.localeCompare("CLOCK_c") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, '<img src="images/icons/CLOCK_c.svg" width="41" height="49">', x, y, 49, 52, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
 
-					// If the select block name is 'SINBLK_f', add the corresponding output port.
-					else if(name.localeCompare("CLOCK_c") == 0) {
+
 						// Adds the ports at various relative locations.
-						var port = graph.insertVertex(v1, null, 'Output', 0.5, 1, 16, 16,
-								'port;spacingLeft=18', true);
-						port.geometry.offset = new mxPoint(-8, -8);
+						var port = graph.insertVertex(v1, null, 'Output', 0.5, 1, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=red;strokeColor=red;gradientColor=red;rotation=90', true);
+						port.geometry.offset = new mxPoint(-6, 0);
 					}
 				}
 				finally
