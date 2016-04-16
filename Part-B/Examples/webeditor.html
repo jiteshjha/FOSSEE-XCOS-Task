@@ -60,6 +60,10 @@
 				mxConstants.MIN_HOTSPOT_SIZE = 16;
 				mxConstants.DEFAULT_HOTSPOT = 1;
 
+				// Enable edge-to-edge connections.
+				mxConnectionHandler.prototype.waypointsEnabled = true;
+				mxConstants.SHADOWCOLOR = '#C0C0C0';
+
 				// Enables guides
 				mxGraphHandler.prototype.guidesEnabled = true;
 
@@ -88,8 +92,24 @@
 				// graph, such as the rubberband selection, but most parts
 				// of the UI are custom in this example.
 				var editor = new mxEditor();
+
+				// Add Container to the mxEditor.
+				editor.setGraphContainer(container);
+
 				var graph = editor.graph;
 				var model = graph.getModel();
+
+				// Set image to new node on the edges.
+				//NOTE: This is not yet working.
+				mxConstraintHandler.prototype.pointImage = new mxImage('images/dot.gif', 10, 10);
+
+
+				graph.view.scale = 1;
+				graph.setPanning(true);
+				graph.setConnectable(true);
+				graph.setConnectableEdges(true);
+				graph.setDisconnectOnMove(false);
+				graph.foldingEnabled = false;
 
 				// Disable highlight of cells when dragging from toolbar
 				graph.setDropEnabled(false);
@@ -975,12 +995,42 @@
 			style = graph.getStylesheet().getDefaultEdgeStyle();
 			style[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#FFFFFF';
 			style[mxConstants.STYLE_STROKEWIDTH] = '2';
-			style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
+
+			//NOTE: Disabled ElbowConnector Orthogonal style for edges.
+			//style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
 			style[mxConstants.STYLE_SOURCE_PERIMETER_SPACING] = -20;
 			style[mxConstants.STYLE_TARGET_PERIMETER_SPACING] = -10;
 			style[mxConstants.STYLE_ENDARROW] = false;
 		};
 	</script>
+	<!--
+		Adds oval markers for edge-to-edge connections.
+	-->
+		<script type="text/javascript">
+
+			mxGraphGetCellStyle = mxGraph.prototype.getCellStyle;
+			mxGraph.prototype.getCellStyle = function(cell)
+			{
+				var style = mxGraphGetCellStyle.apply(this, arguments);
+
+				if (style != null && this.model.isEdge(cell))
+				{
+					style = mxUtils.clone(style);
+
+					if (this.model.isEdge(this.model.getTerminal(cell, true)))
+					{
+						style['startArrow'] = 'oval';
+					}
+
+					if (this.model.isEdge(this.model.getTerminal(cell, false)))
+					{
+						style['endArrow'] = 'oval';
+					}
+				}
+
+				return style;
+			};
+		</script>
 </head>
 
 <!-- Page passes the container for the graph to the program -->
