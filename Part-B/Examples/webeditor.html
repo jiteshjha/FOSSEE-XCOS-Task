@@ -897,6 +897,35 @@
 					model.endUpdate();
 				}
 
+							// Avoids any connections for gestures within tolerance except when in wire-mode
+							// or when over a port
+							var connectionHandlerMouseUp = graph.connectionHandler.mouseUp;
+							graph.connectionHandler.mouseUp = function(sender, me)
+							{
+								if (this.first != null && this.previous != null)
+								{
+									var point = mxUtils.convertPoint(this.graph.container, me.getX(), me.getY());
+									var dx = Math.abs(point.x - this.first.x);
+									var dy = Math.abs(point.y - this.first.y);
+
+									if (dx < this.graph.tolerance && dy < this.graph.tolerance)
+									{
+										// Selects edges in non-wire mode for single clicks, but starts
+										// connecting for non-edges regardless of wire-mode
+										if (this.graph.getModel().isEdge(this.previous.cell))
+										{
+											this.reset();
+										}
+
+										return;
+									}
+								}
+
+								connectionHandlerMouseUp.apply(this, arguments);
+							};
+
+
+
 				graph.setSelectionCell(v1);
 			}
 
@@ -999,7 +1028,11 @@
 			style[mxConstants.STYLE_SOURCE_PERIMETER_SPACING] = -20;
 			style[mxConstants.STYLE_TARGET_PERIMETER_SPACING] = -10;
 			style[mxConstants.STYLE_ENDARROW] = false;
+
+
 		};
+
+
 	</script>
 	<!--
 		Adds oval markers for edge-to-edge connections.
