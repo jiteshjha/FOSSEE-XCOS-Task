@@ -72,6 +72,7 @@
 
 				// Enables snapping waypoints to terminals
 				mxEdgeHandler.prototype.snapToTerminals = true;
+				mxConnectionHandler.prototype.waypointsEnabled = true;
 
 				// Workaround for Internet Explorer ignoring certain CSS directives
 				if (mxClient.IS_QUIRKS)
@@ -994,7 +995,7 @@
 			style[mxConstants.STYLE_STROKEWIDTH] = '2';
 
 			//NOTE: Disabled ElbowConnector Orthogonal style for edges.
-			style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
+			//style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
 			style[mxConstants.STYLE_SOURCE_PERIMETER_SPACING] = -20;
 			style[mxConstants.STYLE_TARGET_PERIMETER_SPACING] = -10;
 			style[mxConstants.STYLE_ENDARROW] = false;
