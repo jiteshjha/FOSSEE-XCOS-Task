@@ -112,6 +112,64 @@
 				// Disable highlight of cells when dragging from toolbar
 				graph.setDropEnabled(false);
 
+				// Alternative solution for implementing connection points without child cells.
+				// This can be extended as shown in portrefs.html example to allow for per-port
+				// incoming/outgoing direction.
+				graph.getAllConnectionConstraints = function(terminal)
+				{
+				   var geo = (terminal != null) ? this.getCellGeometry(terminal.cell) : null;
+
+				   if ((geo != null ? !geo.relative : false) &&
+					   this.getModel().isVertex(terminal.cell) &&
+					   this.getModel().getChildCount(terminal.cell) == 0)
+				   {
+						return [new mxConnectionConstraint(new mxPoint(0, 0.5), false),
+					    	new mxConnectionConstraint(new mxPoint(1, 0.5), false)];
+				    }
+
+					return null;
+				};
+				// Adds a special tooltip for edges
+				graph.setTooltips(true);
+
+				var getTooltipForCell = graph.getTooltipForCell;
+				graph.getTooltipForCell = function(cell)
+				{
+					var tip = '';
+
+					if (cell != null)
+					{
+						var src = this.getModel().getTerminal(cell, true);
+
+						if (src != null)
+						{
+							tip += this.getTooltipForCell(src) + ' ';
+						}
+
+						var parent = this.getModel().getParent(cell);
+
+						if (this.getModel().isVertex(parent))
+						{
+							tip += this.getTooltipForCell(parent) + '.';
+						}
+
+						tip += getTooltipForCell.apply(this, arguments);
+
+						var trg = this.getModel().getTerminal(cell, false);
+
+						if (trg != null)
+						{
+							tip += ' ' + this.getTooltipForCell(trg);
+						}
+					}
+
+					return tip;
+				};
+
+
+				var joinNodeSize = 7;
+				var strokeWidth = 2;
+
 				// Uses the port icon while connections are previewed
 				graph.connectionHandler.getConnectImage = function(state)
 				{
@@ -122,7 +180,7 @@
 				graph.connectionHandler.targetConnectImage = true;
 
 				// Does not allow dangling edges
-				graph.setAllowDanglingEdges(false);
+				//graph.setAllowDanglingEdges(false);
 
 				// Sets the graph container and configures the editor
 				editor.setGraphContainer(container);
@@ -897,6 +955,13 @@
 					model.endUpdate();
 				}
 
+				// Starts connections on the background in wire-mode
+				var connectionHandlerIsStartEvent = graph.connectionHandler.isStartEvent;
+				graph.connectionHandler.isStartEvent = function(me)
+				{
+					return connectionHandlerIsStartEvent.apply(this, arguments);
+				};
+
 							// Avoids any connections for gestures within tolerance except when in wire-mode
 							// or when over a port
 							var connectionHandlerMouseUp = graph.connectionHandler.mouseUp;
@@ -1019,7 +1084,7 @@
 			style[mxConstants.STYLE_IMAGE_HEIGHT] = '16';
 			graph.getStylesheet().putCellStyle('port', style);
 
-			style = graph.getStylesheet().getDefaultEdgeStyle();
+			/*style = graph.getStylesheet().getDefaultEdgeStyle();
 			style[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#FFFFFF';
 			style[mxConstants.STYLE_STROKEWIDTH] = '2';
 
@@ -1027,41 +1092,13 @@
 			//style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
 			style[mxConstants.STYLE_SOURCE_PERIMETER_SPACING] = -20;
 			style[mxConstants.STYLE_TARGET_PERIMETER_SPACING] = -10;
-			style[mxConstants.STYLE_ENDARROW] = false;
+			style[mxConstants.STYLE_ENDARROW] = false;*/
 
 
 		};
 
 
 	</script>
-	<!--
-		Adds oval markers for edge-to-edge connections.
-	-->
-		<script type="text/javascript">
-
-			mxGraphGetCellStyle = mxGraph.prototype.getCellStyle;
-			mxGraph.prototype.getCellStyle = function(cell)
-			{
-				var style = mxGraphGetCellStyle.apply(this, arguments);
-
-				if (style != null && this.model.isEdge(cell))
-				{
-					style = mxUtils.clone(style);
-
-					if (this.model.isEdge(this.model.getTerminal(cell, true)))
-					{
-						style['startArrow'] = 'oval';
-					}
-
-					if (this.model.isEdge(this.model.getTerminal(cell, false)))
-					{
-						style['endArrow'] = 'oval';
-					}
-				}
-
-				return style;
-			};
-		</script>
 </head>
 
 <!-- Page passes the container for the graph to the program -->
