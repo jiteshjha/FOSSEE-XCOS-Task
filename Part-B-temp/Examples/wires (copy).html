@@ -1,0 +1,1483 @@
+<html>
+<!--
+README
+******
+- Edge-to-edge connections: We store the point where the mouse
+was released in the terminal points of the edge geometry and
+use that point to find the nearest segment on the target edge
+and the connection point between the two edges in
+mxGraphView.updateFixedTerminalPoint.
+
+- The orthogonal router, which is implemented as an edge style,
+computes its result based on the output of mxGraphView.
+updateFixedTerminalPoint, which computes all connection points
+for edge-to-edge connections and constrained ports and vertices
+and stores them in state.absolutePoints.
+
+- Routing directions are stored in the 'portConstraint' style.
+Possible values for this style horizontal and vertical. Note
+that this may have other values depending on the edge style.
+
+- For edge-to-edge connections, a 'source-/targetConstraint'
+style is added in updateFixedTerminalPoint that contains the
+orientation of the segment that the edge connects to. Possible
+values are horizontal, vertical.
+
+- An alternative solution for connection points via connection
+constraints is demonstrated. In this setup, the edge is connected
+to the parent cell directly. There are no child cells that act
+as "ports". Instead, the connection information is stored as a
+relative point in the connecting edge. (See also: portrefs.html
+for storing references to ports.)
+
+-->
+<head>
+    <title>XCOS Web Editor</title>
+	<style type="text/css" media="screen">
+		BODY {
+			font-family: Arial;
+		}
+		H1 {
+			font-size: 18px;
+		}
+		H2 {
+			font-size: 16px;
+		}
+	</style>
+
+	<!-- Sets the basepath for the library if not in same directory -->
+	<script type="text/javascript">
+		mxBasePath = '../src';
+	</script>
+
+	<!-- Loads and initializes the library -->
+	<script type="text/javascript" src="../src/js/mxClient.js"></script>
+
+
+	<script src="https://code.jquery.com/jquery-2.2.3.min.js" integrity="sha256-a23g1Nt4dtEYOj7bR+vTu7+T8VP13humZFBJNIYoEJo=" crossorigin="anonymous"></script>
+
+
+	<script type="text/javascript">
+		// If connect preview is not moved away then getCellAt is used to detect the cell under
+		// the mouse if the mouse is over the preview shape in IE (no event transparency), ie.
+		// the built-in hit-detection of the HTML document will not be used in this case.
+		mxConnectionHandler.prototype.movePreviewAway = false;
+		mxConnectionHandler.prototype.waypointsEnabled = true;
+		mxGraph.prototype.resetEdgesOnConnect = false;
+		mxConstants.SHADOWCOLOR = '#C0C0C0';
+
+
+
+		// Enables guides
+		mxGraphHandler.prototype.guidesEnabled = true;
+
+	    // Alt disables guides
+	    mxGuide.prototype.isEnabledForEvent = function(evt)
+	    {
+	    	return !mxEvent.isAltDown(evt);
+	    };
+
+		// Enables snapping waypoints to terminals
+		mxEdgeHandler.prototype.snapToTerminals = true;
+
+		function main(container, outline, toolbar, sidebar, status)
+		{
+			// Checks if the browser is supported
+			if (!mxClient.isBrowserSupported())
+			{
+				// Displays an error message if the browser is not supported.
+				mxUtils.error('Browser is not supported!', 200, false);
+			}
+			else
+			{
+				// Assigns some global constants for general behaviour, eg. minimum
+				// size (in pixels) of the active region for triggering creation of
+				// new connections, the portion (100%) of the cell area to be used
+				// for triggering new connections, as well as some fading options for
+				// windows and the rubberband selection.
+				mxConstants.MIN_HOTSPOT_SIZE = 16;
+				mxConstants.DEFAULT_HOTSPOT = 1;
+				
+
+
+
+
+				// Workaround for Internet Explorer ignoring certain CSS directives
+				if (mxClient.IS_QUIRKS)
+				{
+					document.body.style.overflow = 'hidden';
+					new mxDivResizer(container);
+					new mxDivResizer(outline);
+					new mxDivResizer(toolbar);
+					new mxDivResizer(sidebar);
+					new mxDivResizer(status);
+				}
+				// Creates a wrapper editor with a graph inside the given container.
+				// The editor is used to create certain functionality for the
+				// graph, such as the rubberband selection, but most parts
+				// of the UI are custom in this example.
+				var editor = new mxEditor();
+
+				// Add Container to the mxEditor.
+				//editor.setGraphContainer(container);
+				var graph = new mxGraph(container);
+				var model = graph.getModel();
+				console.log(graph);
+				graph.view.scale = 1;
+				graph.setPanning(true);
+				graph.setConnectable(true);
+				graph.setConnectableEdges(true);
+				graph.setDisconnectOnMove(false);
+				graph.foldingEnabled = false;
+
+				//Maximum size
+				//graph.maximumGraphBounds = new mxRectangle(0, 0, 800, 600)
+				//graph.border = 50;
+
+
+                 // Disable highlight of cells when dragging from toolbar
+				graph.setDropEnabled(false);
+
+				// Alternative solution for implementing connection points without child cells.
+				// This can be extended as shown in portrefs.html example to allow for per-port
+				// incoming/outgoing direction.
+
+				graph.getAllConnectionConstraints = function(terminal)
+				{
+				   var geo = (terminal != null) ? this.getCellGeometry(terminal.cell) : null;
+
+				   if ((geo != null ? !geo.relative : false) &&
+					   this.getModel().isVertex(terminal.cell) &&
+					   this.getModel().getChildCount(terminal.cell) == 0)
+				   {
+						return [new mxConnectionConstraint(new mxPoint(0, 0.5), false),
+					    	new mxConnectionConstraint(new mxPoint(1, 0.5), false)];
+				    }
+
+					return null;
+				};
+
+
+				// Centers the port icon on the target port
+				graph.connectionHandler.targetConnectImage = true;
+
+				// Does not allow dangling edges
+				//graph.setAllowDanglingEdges(false);
+
+				// Sets the graph container and configures the editor
+				editor.setGraphContainer(container);
+				var config = mxUtils.load(
+					'editors/config/keyhandler-commons.xml').
+						getDocumentElement();
+				editor.configure(config);
+
+				// Defines the default group to be used for grouping. The
+				// default group is a field in the mxEditor instance that
+				// is supposed to be a cell which is cloned for new cells.
+				// The groupBorderSize is used to define the spacing between
+				// the children of a group and the group bounds.
+				var group = new mxCell('Group', new mxGeometry(), 'group');
+				group.setVertex(true);
+				group.setConnectable(false);
+				editor.defaultGroup = group;
+				editor.groupBorderSize = 20;
+
+				// Disables drag-and-drop into non-swimlanes.
+				graph.isValidDropTarget = function(cell, cells, evt)
+				{
+					return this.isSwimlane(cell);
+				};
+
+				// Disables drilling into non-swimlanes.
+				graph.isValidRoot = function(cell)
+				{
+					return this.isValidDropTarget(cell);
+				}
+
+				// Does not allow selection of locked cells
+				graph.isCellSelectable = function(cell)
+				{
+					return !this.isCellLocked(cell);
+				};
+
+				// Returns a shorter label if the cell is collapsed and no
+				// label for expanded groups
+				graph.getLabel = function(cell)
+				{
+					var tmp = mxGraph.prototype.getLabel.apply(this, arguments); // "supercall"
+
+					if (this.isCellLocked(cell))
+					{
+						// Returns an empty label but makes sure an HTML
+						// element is created for the label (for event
+						// processing wrt the parent label)
+						return '';
+					}
+					else if (this.isCellCollapsed(cell))
+					{
+						var index = tmp.indexOf('</h1>');
+
+						if (index > 0)
+						{
+							tmp = tmp.substring(0, index+5);
+						}
+					}
+
+					return tmp;
+				}
+
+				// Disables HTML labels for swimlanes to avoid conflict
+				// for the event processing on the child cells. HTML
+				// labels consume events before underlying cells get the
+				// chance to process those events.
+				//
+				// NOTE: Use of HTML labels is only recommended if the specific
+				// features of such labels are required, such as special label
+				// styles or interactive form fields. Otherwise non-HTML labels
+				// should be used by not overidding the following function.
+				// See also: configureStylesheet.
+				graph.isHtmlLabel = function(cell)
+				{
+					return !this.isSwimlane(cell);
+				}
+
+				// To disable the folding icon, use the following code:
+				graph.isCellFoldable = function(cell)
+				{
+					return false;
+				}
+
+				// Array to store the objects for CANIMXY3D Property fields.
+				var arrayObject = [];
+				// Shows a "modal" window when double clicking a vertex.
+
+				graph.dblClick = function(evt, cell)
+				{
+					// Do not fire a DOUBLE_CLICK event here as mxEditor will
+					// consume the event and start the in-place editor.
+					if (this.isEnabled() &&
+						!mxEvent.isConsumed(evt) &&
+						cell != null &&
+						this.isCellEditable(cell))
+					{
+						if (this.model.isEdge(cell) ||
+							!this.isHtmlLabel(cell))
+						{
+							this.startEditingAtCell(cell);
+						}
+						// If the name of the cell block is '3DSCOPE', then show the modal window.
+
+						// Get the name of the block and compare it with '3DSCOPE'.
+						// Works with any URL.
+
+						// Get the name of the block from the image URl.
+						// Source: http://stackoverflow.com/questions/3671522/regex-capture-filename-from-url-without-file-extention
+						var name =  cell.value.substring(cell.value.lastIndexOf("/") + 1, cell.value.lastIndexOf("."));
+						if((name.localeCompare("3DSCOPE") == 0))
+						{
+							// source : http://api.jquery.com/jQuery.grep/
+							// NOTE: Uses jquery
+							// Output : result.length is 0 if object not found
+							// 			result.length is 1 if object found
+
+							var result = $.grep(arrayObject, function(e){ return e.id == cell.id; });
+
+							// If not found, set the inital values, else set the values already in the object.
+
+							var numberOfCurves = result.length == 0 ? 1 : result[0].numberOfCurves;
+							var colorOrMark = result.length == 0 ? [1,2,3,4,5,6,7,13] : result[0].colorOrMark;
+							var lineOrMarkSize = result.length == 0 ? [1,1,1,1,1,1,1,1] : result[0].lineOrMarkSize;
+							var outputWindowNumber = result.length == 0 ? -1 : result[0].outputWindowNumber;
+							var outputWindowPosition = result.length == 0 ? [] : result[0].outputWindowPosition;
+							var outputWindowSize = result.length == 0 ? [] : result[0].outputWindowSize;
+							var xminAndXmax = result.length == 0 ? [-15, 15] : result[0].xminAndXmax;
+							var yminAndYmax = result.length == 0 ? [-15, 15] : result[0].yminAndYmax;
+							var zminAndZmax = result.length == 0 ? [-15, 15] : result[0].zminAndZmax;
+							var alphaAndTheta = result.length == 0 ? [50, 280] : result[0].alphaAndTheta;
+							var bufferSize = result.length == 0 ? 2 : result[0].bufferSize;
+
+							// 'Set Scope Parameters' modal window code starts here:
+
+							// Create basic structure for the form.
+							var content = document.createElement('div');
+							content.style.cssText = 'border-style: solid;border-width: 1px;margin:10px 10px 10px 10px';
+
+							// Heading of content.
+							var heading = document.createElement('h2');
+							heading.innerHTML = "Set Scope Parameters";
+							heading.style.cssText = 'padding-left:2pc;';
+							content.appendChild(heading);
+
+							// Add Form.
+							var myform = document.createElement("form");
+							myform.style.cssText = 'margin-right:2pc;margin-left:2pc;margin-bottom:2pc;';
+							myform.method = "post";
+							myform.id = "setScopeParameters";
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Number of curves";
+							myform.appendChild(namelabel);
+
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = numberOfCurves;
+    						input.name = "numberOfCurves";
+							input.style.cssText='float: right;';
+							input.id = "numberOfCurves";
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var namelabel = document.createElement('label'); // Create Label for Name Field
+							namelabel.innerHTML = "color (>0) or mark(<0)"; // Set Field Labels
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = colorOrMark;
+    						input.name = "colorOrMark";
+							input.id = "colorOrMark";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "line or mark size";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = lineOrMarkSize;
+    						input.name = "lineOrMarkSize";
+							input.id = "lineOrMarkSize";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Output window number(-1 for automatic)";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = outputWindowNumber;
+    						input.name = "outputWindowNumber";
+							input.id = "outputWindowNumber";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Output window position";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = outputWindowPosition;
+    						input.name = "outputWindowPosition";
+							input.id = "outputWindowPosition";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Output window sizes";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = outputWindowSize;
+    						input.name = "outputWindowSize";
+							input.id = "outputWindowSize";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Xmin and Xmax";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = xminAndXmax;
+    						input.name = "xminAndXmax";
+							input.id = "xminAndXmax";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Ymin and Ymax";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = yminAndYmax;
+    						input.name = "yminAndYmax";
+							input.id = "yminAndYmax";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Zmin and Zmax";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = zminAndZmax;
+    						input.name = "zminAndZmax";
+							input.id = "zminAndZmax";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Aplha and Theta";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = alphaAndTheta;
+    						input.name = "alphaAndTheta";
+							input.id = "alphaAndTheta"
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Input Title.
+							var namelabel = document.createElement('label');
+							namelabel.innerHTML = "Buffer size";
+							myform.appendChild(namelabel);
+
+							// Input.
+							var input = document.createElement("input");
+    						input.value = bufferSize;
+    						input.name = "bufferSize";
+							input.id = "bufferSize";
+							input.style.cssText='float: right;';
+							myform.appendChild(input);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							// Button - Submit.
+							var btn = document.createElement("button");
+							btn.innerHTML = 'Submit';
+							btn.type = "button";
+							btn.name = "submit";
+
+							// Executes when button 'btn' is clicked.
+							btn.onclick = function () {
+
+								// If id is found, delete the current object.
+								if (result.length != 0) {
+
+									// source : http://api.jquery.com/jQuery.grep/
+									// NOTE: Uses jquery
+									// Output : result.length is 0 if object not found
+									// 			result.length is 1 if object found
+
+									// The below code returns an array of objects excluding the object with current 'id's
+									arrayObject = $.grep(arrayObject, function(e){
+								     	return e.id != cell.id;
+								  	});
+								}
+
+								// Create an object with properties field.
+								var propertiesObject = {
+									id : cell.id,
+									numberOfCurves : document.querySelector('#numberOfCurves').value,
+									colorOrMark : document.querySelector('#colorOrMark').value,
+									lineOrMarkSize : document.querySelector('#lineOrMarkSize').value,
+									outputWindowNumber : document.querySelector('#outputWindowNumber').value,
+									outputWindowPosition : document.querySelector('#outputWindowPosition').value,
+									outputWindowSize : document.querySelector('#outputWindowSize').value,
+									xminAndXmax : document.querySelector('#xminAndXmax').value,
+									yminAndYmax : document.querySelector('#yminAndYmax').value,
+									alphaAndTheta : document.querySelector('#alphaAndTheta').value,
+									bufferSize : document.querySelector('#bufferSize').value
+								};
+
+								// Push the object onto arrayObject.
+								arrayObject.push(propertiesObject);
+							};
+							myform.appendChild(btn);
+
+							// Button - Cancel.
+							var btn = document.createElement("button");
+							btn.innerHTML = 'Cancel';
+							btn.type = "button";
+							btn.name = "submit";
+							btn.style.cssText='float:right;';
+							btn.onclick = function () {
+								// Only removes the content div, not the modal window.
+								//content.style.display = 'none';
+							};
+							myform.appendChild(btn);
+
+							// Line break.
+							var linebreak = document.createElement('br');
+							myform.appendChild(linebreak);
+
+							content.appendChild(myform);
+							showModalWindow(this, 'Scilab Multiple Values Request', content, 450, 432);
+						}
+					}
+
+					// Disables any default behaviour for the double click
+					mxEvent.consume(evt);
+				};
+
+				// Enables new connections
+				graph.setConnectable(true);
+
+				// Adds all required styles to the graph (see below)
+				configureStylesheet(graph);
+
+				// Adds sidebar icons.
+				//
+				// NOTE: For non-HTML labels a simple string as the third argument
+				// and the alternative style as shown in configureStylesheet should
+				// be used. For example, the first call to addSidebar icon would
+				// be as follows:
+				// addSidebarIcon(graph, sidebar, 'Website', 'images/icons48/earth.png');
+                addSidebarIcon(graph, sidebar,'SINBLK_f','images/icons/SINBLK_f.png');
+				addSidebarIcon(graph, sidebar,'COSBLK_f','images/icons/COSBLK_f.png');
+
+				addSidebarIcon(graph, sidebar,'TIME_f','images/icons/TIME_f.png');
+				addSidebarIcon(graph, sidebar,'CANIMXY3D','images/icons/CANIMXY3D.png');
+				addSidebarIcon(graph, sidebar,
+					'CLOCK_c',
+					'images/icons/CLOCK_c.png');
+
+				// Displays useful hints in a small semi-transparent box.
+				var hints = document.createElement('div');
+				hints.style.position = 'absolute';
+				hints.style.overflow = 'hidden';
+				hints.style.width = '230px';
+				hints.style.bottom = '56px';
+				hints.style.height = '76px';
+				hints.style.right = '20px';
+
+				hints.style.background = 'black';
+				hints.style.color = 'white';
+				hints.style.fontFamily = 'Arial';
+				hints.style.fontSize = '10px';
+				hints.style.padding = '4px';
+
+				mxUtils.setOpacity(hints, 50);
+
+				mxUtils.writeln(hints, '- Drag an image from the sidebar to the graph');
+				mxUtils.writeln(hints, '- Doubleclick on a vertex or edge to edit');
+				mxUtils.writeln(hints, '- Shift- or Rightclick and drag for panning');
+				mxUtils.writeln(hints, '- Move the mouse over a cell to see a tooltip');
+				mxUtils.writeln(hints, '- Click and drag a vertex to move and connect');
+				document.body.appendChild(hints);
+
+				// Creates a new DIV that is used as a toolbar and adds
+				// toolbar buttons.
+				var spacer = document.createElement('div');
+				spacer.style.display = 'inline';
+				spacer.style.padding = '8px';
+
+				addToolbarButton(editor, toolbar, 'groupOrUngroup', '(Un)group', 'images/group.png');
+
+				// Defines a new action for deleting or ungrouping
+				editor.addAction('groupOrUngroup', function(editor, cell)
+				{
+					cell = cell || editor.graph.getSelectionCell();
+					if (cell != null && editor.graph.isSwimlane(cell))
+					{
+						editor.execute('ungroup', cell);
+					}
+					else
+					{
+						editor.execute('group');
+					}
+				});
+
+				addToolbarButton(editor, toolbar, 'delete', 'Delete', 'images/delete2.png');
+
+				toolbar.appendChild(spacer.cloneNode(true));
+
+				addToolbarButton(editor, toolbar, 'cut', 'Cut', 'images/cut.png');
+				addToolbarButton(editor, toolbar, 'copy', 'Copy', 'images/copy.png');
+				addToolbarButton(editor, toolbar, 'paste', 'Paste', 'images/paste.png');
+
+				toolbar.appendChild(spacer.cloneNode(true));
+
+				addToolbarButton(editor, toolbar, 'undo', '', 'images/undo.png');
+				addToolbarButton(editor, toolbar, 'redo', '', 'images/redo.png');
+
+				toolbar.appendChild(spacer.cloneNode(true));
+
+				addToolbarButton(editor, toolbar, 'show', 'Show', 'images/camera.png');
+				addToolbarButton(editor, toolbar, 'print', 'Print', 'images/printer.png');
+
+				toolbar.appendChild(spacer.cloneNode(true));
+
+				// Defines a new export action
+				editor.addAction('export', function(editor, cell)
+				{
+					var textarea = document.createElement('textarea');
+					textarea.style.width = '400px';
+					textarea.style.height = '400px';
+					var enc = new mxCodec(mxUtils.createXmlDocument());
+					var node = enc.encode(editor.graph.getModel());
+					textarea.value = mxUtils.getPrettyXml(node);
+					showModalWindow(graph, 'XML', textarea, 410, 440);
+				});
+
+				addToolbarButton(editor, toolbar, 'export', 'Export', 'images/export1.png');
+
+				// ---
+
+				// Adds toolbar buttons into the status bar at the bottom
+				// of the window.
+
+				addToolbarButton(editor, status, 'enterGroup', 'Enter', 'images/view_next.png', true);
+				addToolbarButton(editor, status, 'exitGroup', 'Exit', 'images/view_previous.png', true);
+
+				status.appendChild(spacer.cloneNode(true));
+
+				addToolbarButton(editor, status, 'zoomIn', '', 'images/zoom_in.png', true);
+				addToolbarButton(editor, status, 'zoomOut', '', 'images/zoom_out.png', true);
+				addToolbarButton(editor, status, 'actualSize', '', 'images/view_1_1.png', true);
+				addToolbarButton(editor, status, 'fit', '', 'images/fit_to_size.png', true);
+
+				// Creates the outline (navigator, overview) for moving
+				// around the graph in the top, right corner of the window.
+				var outln = new mxOutline(graph, outline);
+
+				// To show the images in the outline, uncomment the following code
+				//outln.outline.labelsVisible = true;
+				//outln.outline.setHtmlLabels(true);
+
+				// Fades-out the splash screen after the UI has been loaded.
+				var splash = document.getElementById('splash');
+				if (splash != null)
+				{
+					try
+					{
+						mxEvent.release(splash);
+						mxEffects.fadeOut(splash, 100, true);
+					}
+					catch (e)
+					{
+
+						// mxUtils is not available (library not loaded)
+						splash.parentNode.removeChild(splash);
+					}
+				}
+
+
+				var parent = graph.getDefaultParent();
+
+			graph.getModel().beginUpdate();
+			try
+			{
+				var v1 = graph.insertVertex(parent, null, 'J1', 80, 40, 40, 80,
+						'verticalLabelPosition=top;verticalAlign=bottom;shadow=1;fillColor=' + fillColor);
+				v1.setConnectable(false);
+
+				var v11 = graph.insertVertex(v1, null, '1', 0, 0, 10, 16,
+						'shape=line;align=left;verticalAlign=middle;fontSize=10;routingCenterX=-0.5;'+
+						'spacingLeft=12;fontColor=' + fontColor + ';strokeColor=' + strokeColor);
+				v11.geometry.relative = true;
+				v11.geometry.offset = new mxPoint(-v11.geometry.width, 2);
+				var v12 = v11.clone();
+				v12.value = '2';
+				v12.geometry.offset = new mxPoint(-v11.geometry.width, 22);
+				v1.insert(v12);
+				var v13 = v11.clone();
+				v13.value = '3';
+				v13.geometry.offset = new mxPoint(-v11.geometry.width, 42);
+				v1.insert(v13);
+				var v14 = v11.clone();
+				v14.value = '4';
+				v14.geometry.offset = new mxPoint(-v11.geometry.width, 62);
+				v1.insert(v14);
+
+				var v15 = v11.clone();
+				v15.value = '5';
+				v15.geometry.x = 1;
+				v15.style =	'shape=line;align=right;verticalAlign=middle;fontSize=10;routingCenterX=0.5;'+
+					'spacingRight=12;fontColor=' + fontColor + ';strokeColor=' + strokeColor;
+				v15.geometry.offset = new mxPoint(0, 2);
+				v1.insert(v15);
+				var v16 = v15.clone();
+				v16.value = '6';
+				v16.geometry.offset = new mxPoint(0, 22);
+				v1.insert(v16);
+				var v17 = v15.clone();
+				v17.value = '7';
+				v17.geometry.offset = new mxPoint(0, 42);
+				v1.insert(v17);
+				var v18 = v15.clone();
+				v18.value = '8';
+				v18.geometry.offset = new mxPoint(0, 62);
+				v1.insert(v18);
+
+				var v19 = v15.clone();
+				v19.value = 'clk';
+				v19.geometry.x = 0.5;
+				v19.geometry.y = 1;
+				v19.geometry.width = 10;
+				v19.geometry.height = 4;
+				// NOTE: portConstraint is defined for east direction, so must be inverted here
+				v19.style = 'shape=triangle;direction=north;spacingBottom=12;align=center;portConstraint=horizontal;'+
+					'fontSize=8;strokeColor=' + strokeColor + ';routingCenterY=0.5;';
+				v19.geometry.offset = new mxPoint(-4, -4);
+				v1.insert(v19);
+
+				var v2 = graph.insertVertex(parent, null, 'R1', 220, 220, 80, 20,
+					'shape=resistor;verticalLabelPosition=top;verticalAlign=bottom;');
+
+				// Uses implementation of connection points via constraints (see above)
+				//v2.setConnectable(false);
+
+ 				/*var v21 = graph.insertVertex(v2, null, 'A', 0, 0.5, 10, 1,
+ 					'shape=none;spacingBottom=11;spacingLeft=1;align=left;fontSize=8;'+
+ 					'fontColor=#4c4c4c;strokeColor=#909090;');
+ 				v21.geometry.relative = true;
+ 				v21.geometry.offset = new mxPoint(0, -1);
+
+ 				var v22 = graph.insertVertex(v2, null, 'B', 1, 0.5, 10, 1,
+ 					'spacingBottom=11;spacingLeft=1;align=left;fontSize=8;'+
+ 					'fontColor=#4c4c4c;strokeColor=#909090;');
+ 				v22.geometry.relative = true;
+ 				v22.geometry.offset = new mxPoint(-10, -1);*/
+
+				var v3 = graph.addCell(graph.getModel().cloneCell(v1));
+				v3.value = 'J3';
+				v3.geometry.x = 420;
+				v3.geometry.y = 340;
+
+				// Connection constraints implemented in edges, alternatively this
+				// can be implemented using references, see: portrefs.html
+				var e1 = graph.insertEdge(parent, null, 'e1', v1.getChildAt(7), v2,
+					'entryX=0;entryY=0.5;entryPerimeter=0;');
+				e1.geometry.points = [new mxPoint(180, 110)];
+
+				var e2 = graph.insertEdge(parent, null, 'e2', v1.getChildAt(4), v2,
+					'entryX=1;entryY=0.5;entryPerimeter=0;');
+				e2.geometry.points = [new mxPoint(320, 50), new mxPoint(320, 230)];
+
+				var e3 = graph.insertEdge(parent, null, 'crossover', e1, e2);
+				e3.geometry.setTerminalPoint(new mxPoint(180, 140), true);
+				e3.geometry.setTerminalPoint(new mxPoint(320, 140), false);
+
+// 				var e1 = graph.insertEdge(parent, null, 'e1', v1.getChildAt(7), v2.getChildAt(0));
+// 				e1.geometry.points = [new mxPoint(180, 140)];
+
+// 				var e2 = graph.insertEdge(parent, null, '', v1.getChildAt(4), v2.getChildAt(1));
+// 				e2.geometry.points = [new mxPoint(320, 80)];
+
+// 				var e3 = graph.insertEdge(parent, null, 'crossover', e1, e2);
+// 				e3.geometry.setTerminalPoint(new mxPoint(180, 160), true);
+// 				e3.geometry.setTerminalPoint(new mxPoint(320, 160), false);
+
+				var e4 = graph.insertEdge(parent, null, 'e4', v2, v3.getChildAt(0),
+					'exitX=1;exitY=0.5;entryPerimeter=0;');
+				e4.geometry.points = [new mxPoint(380, 230)];
+
+				var e5 = graph.insertEdge(parent, null, 'e5', v3.getChildAt(5), v1.getChildAt(0));
+				e5.geometry.points = [new mxPoint(500, 310), new mxPoint(500, 20), new mxPoint(50, 20)];
+
+				var e6 = graph.insertEdge(parent, null, '');
+				e6.geometry.setTerminalPoint(new mxPoint(100, 500), true);
+				e6.geometry.setTerminalPoint(new mxPoint(600, 500), false);
+
+				var e7 = graph.insertEdge(parent, null, 'e7', v3.getChildAt(7), e6);
+				e7.geometry.setTerminalPoint(new mxPoint(500, 500), false);
+				e7.geometry.points = [new mxPoint(500, 350)];
+			}
+			finally
+			{
+				graph.getModel().endUpdate();
+			}
+
+				// Starts connections on the background in wire-mode
+				var connectionHandlerIsStartEvent = graph.connectionHandler.isStartEvent;
+				graph.connectionHandler.isStartEvent = function(me)
+				{
+					return connectionHandlerIsStartEvent.apply(this, arguments);
+				};
+
+				// Avoids any connections for gestures within tolerance except when in wire-mode
+				// or when over a port
+				var connectionHandlerMouseUp = graph.connectionHandler.mouseUp;
+				graph.connectionHandler.mouseUp = function(sender, me)
+				{
+					if (this.first != null && this.previous != null)
+					{
+						var point = mxUtils.convertPoint(this.graph.container, me.getX(), me.getY());
+						var dx = Math.abs(point.x - this.first.x);
+						var dy = Math.abs(point.y - this.first.y);
+
+						if (dx < this.graph.tolerance && dy < this.graph.tolerance)
+						{
+							// Selects edges in non-wire mode for single clicks, but starts
+							// connecting for non-edges regardless of wire-mode
+							if (this.graph.getModel().isEdge(this.previous.cell))
+							{
+								this.reset();
+							}
+
+							return;
+						}
+					}
+
+					connectionHandlerMouseUp.apply(this, arguments);
+				};
+
+
+				mxEvent.disableContextMenu(container);
+			}
+		};
+		function addToolbarButton(editor, toolbar, action, label, image, isTransparent)
+		{
+			var button = document.createElement('button');
+			button.style.fontSize = '10';
+			if (image != null)
+			{
+				var img = document.createElement('img');
+				img.setAttribute('src', image);
+				img.style.width = '16px';
+				img.style.height = '16px';
+				img.style.verticalAlign = 'middle';
+				img.style.marginRight = '2px';
+				button.appendChild(img);
+			}
+			if (isTransparent)
+			{
+				button.style.background = 'transparent';
+				button.style.color = '#FFFFFF';
+				button.style.border = 'none';
+			}
+			mxEvent.addListener(button, 'click', function(evt)
+			{
+				editor.execute(action);
+			});
+			mxUtils.write(button, label);
+			toolbar.appendChild(button);
+		};
+		function showModalWindow(graph, title, content, width, height)
+		{
+			var background = document.createElement('div');
+			background.style.position = 'absolute';
+			background.style.left = '0px';
+			background.style.top = '0px';
+			background.style.right = '0px';
+			background.style.bottom = '0px';
+			background.style.background = 'black';
+			mxUtils.setOpacity(background, 50);
+			document.body.appendChild(background);
+
+			if (mxClient.IS_IE)
+			{
+				new mxDivResizer(background);
+			}
+
+			var x = Math.max(0, document.body.scrollWidth/2-width/2);
+			var y = Math.max(10, (document.body.scrollHeight ||
+						document.documentElement.scrollHeight)/2-height*2/3);
+			var wnd = new mxWindow(title, content, x, y, width, height, false, true);
+			wnd.setClosable(true);
+
+			// Fades the background out after after the window has been closed
+			wnd.addListener(mxEvent.DESTROY, function(evt)
+			{
+				graph.setEnabled(true);
+				mxEffects.fadeOut(background, 50, true,
+					10, 30, true);
+			});
+
+			graph.setEnabled(false);
+			graph.tooltipHandler.hide();
+			wnd.setVisible(true);
+		};
+		function addSidebarIcon(graph, sidebar, label, image)
+		{
+			// Create a temporary image file to retrieve width and height of the image later in the function.
+			var imgTemp = new Image();
+			// Add the location of the image.
+			imgTemp.src = image;
+			// Function that is executed when the image is dropped on
+			// the graph. The cell argument points to the cell under
+			// the mousepointer if there is one.
+			var funct = function(graph, evt, cell, x, y)
+			{
+				var parent = graph.getDefaultParent();
+				var model = graph.getModel();
+
+				var v1 = null;
+
+				model.beginUpdate();
+				try
+				{
+					// NOTE: For non-HTML labels the image must be displayed via the style
+					// rather than the label markup, so use 'image=' + image for the style.
+					// as follows: v1 = graph.insertVertex(parent, null, label,
+					// pt.x, pt.y, 120, 120, 'image=' + image);
+
+					// If the select block name is 'COSBLK_f', add the corresponding input and output ports.
+					if (label.localeCompare("COSBLK_f") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, 'COS', x, y, 50, 50, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(0, -6);
+					}
+
+					// If the select block name is 'SINBLK_f', add the corresponding input and output ports.
+					else if(label.localeCompare("SINBLK_f") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, 'SIN', x, y, 50, 50, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(0, -6);
+					}
+
+					// If the select block name is 'CANIMXY3D', add the corresponding input ports.
+					else if(label.localeCompare("CANIMXY3D") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, '<img src="images/icons/3DSCOPE.svg" width="41" height="49">', x, y, 50, 100, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.3, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Input', 0, 0.7, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(-10, -6);
+
+						var port = graph.insertVertex(v1, null, 'Input', 0.5, 0, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=red;strokeColor=red;gradientColor=red;rotation=90', true);
+						port.geometry.offset = new mxPoint(-5, -10);
+					}
+
+					// If the select block name is 'TIME_f', add the corresponding output port.
+					else if(label.localeCompare("TIME_f") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, '<img src="images/icons/CLOCK_f.svg" width="41" height="49">', x, y, 49, 52, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Output', 1, 0.5, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=black;strokeColor=black;gradientColor=black', true);
+						port.geometry.offset = new mxPoint(0, -6);
+					}
+
+					// If the select block name is 'SINBLK_f', add the corresponding output port.
+					else if(label.localeCompare("CLOCK_c") == 0) {
+						// Create a vertex with the given image's height and width, and set opacity to 0.
+						v1 = graph.insertVertex(parent, null, '<img src="images/icons/CLOCK_c.svg" width="41" height="49">', x, y, 49, 52, 'gradientColor=white;fillColor=#D3D3D3;strokeColor=black');
+						v1.setConnectable(false);
+
+
+						// Adds the ports at various relative locations.
+						var port = graph.insertVertex(v1, null, 'Output', 0.5, 1, 10, 10,
+								'shape=triangle;perimeter=trianglePerimeter;rounded=0;fillColor=red;strokeColor=red;gradientColor=red;rotation=90', true);
+						port.geometry.offset = new mxPoint(-6, 0);
+					}
+				}
+				finally
+				{
+					model.endUpdate();
+				}
+
+				// Starts connections on the background in wire-mode
+				var connectionHandlerIsStartEvent = graph.connectionHandler.isStartEvent;
+				graph.connectionHandler.isStartEvent = function(me)
+				{
+					return connectionHandlerIsStartEvent.apply(this, arguments);
+				};
+
+							// Avoids any connections for gestures within tolerance except when in wire-mode
+							// or when over a port
+							var connectionHandlerMouseUp = graph.connectionHandler.mouseUp;
+							graph.connectionHandler.mouseUp = function(sender, me)
+							{
+								if (this.first != null && this.previous != null)
+								{
+									var point = mxUtils.convertPoint(this.graph.container, me.getX(), me.getY());
+									var dx = Math.abs(point.x - this.first.x);
+									var dy = Math.abs(point.y - this.first.y);
+
+									if (dx < this.graph.tolerance && dy < this.graph.tolerance)
+									{
+										// Selects edges in non-wire mode for single clicks, but starts
+										// connecting for non-edges regardless of wire-mode
+										if (this.graph.getModel().isEdge(this.previous.cell))
+										{
+											this.reset();
+										}
+
+										return;
+									}
+								}
+
+								connectionHandlerMouseUp.apply(this, arguments);
+							};
+
+
+
+				graph.setSelectionCell(v1);
+			}
+
+			// Creates the image which is used as the sidebar icon (drag source)
+			var img = document.createElement('img');
+			img.setAttribute('src', image);
+			img.style.width = String.valueOf(imgTemp.width);
+			img.style.height = String.valueOf(imgTemp.height);
+			img.title = 'Drag this to the diagram to create a new vertex';
+			img.style.border = '10px solid transparent';
+			sidebar.appendChild(img);
+
+			var dragElt = document.createElement('div');
+			dragElt.style.border = 'dashed black 1px';
+			dragElt.style.width = '49px';
+			dragElt.style.height = '49px';
+
+			// Creates the image which is used as the drag icon (preview)
+			var ds = mxUtils.makeDraggable(img, graph, funct, dragElt, 0, 0, true, true);
+			ds.setGuidesEnabled(true);
+		};
+		function configureStylesheet(graph)
+        {
+        	var style = new Object();
+        	style[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_RECTANGLE;
+        	style[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
+        	style[mxConstants.STYLE_ALIGN] = mxConstants.ALIGN_CENTER;
+        	style[mxConstants.STYLE_VERTICAL_ALIGN] = mxConstants.ALIGN_MIDDLE;
+        	style[mxConstants.STYLE_GRADIENTCOLOR] = '#41B9F5';
+        	style[mxConstants.STYLE_FILLCOLOR] = '#8CCDF5';
+        	style[mxConstants.STYLE_STROKECOLOR] = '#1B78C8';
+        	style[mxConstants.STYLE_FONTCOLOR] = '#000000';
+        	style[mxConstants.STYLE_ROUNDED] = true;
+        	style[mxConstants.STYLE_OPACITY] = '80';
+        	style[mxConstants.STYLE_FONTSIZE] = '12';
+        	style[mxConstants.STYLE_FONTSTYLE] = 0;
+        	style[mxConstants.STYLE_IMAGE_WIDTH] = '48';
+        	style[mxConstants.STYLE_IMAGE_HEIGHT] = '48';
+        	graph.getStylesheet().putDefaultVertexStyle(style);
+
+        	// NOTE: Alternative vertex style for non-HTML labels should be as
+        	// follows. This repaces the above style for HTML labels.
+        	/*var style = new Object();
+        	style[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_LABEL;
+        	style[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
+        	style[mxConstants.STYLE_VERTICAL_ALIGN] = mxConstants.ALIGN_TOP;
+        	style[mxConstants.STYLE_ALIGN] = mxConstants.ALIGN_CENTER;
+        	style[mxConstants.STYLE_IMAGE_ALIGN] = mxConstants.ALIGN_CENTER;
+        	style[mxConstants.STYLE_IMAGE_VERTICAL_ALIGN] = mxConstants.ALIGN_TOP;
+        	style[mxConstants.STYLE_SPACING_TOP] = '56';
+    	    style[mxConstants.STYLE_GRADIENTCOLOR] = '#7d85df';
+			style[mxConstants.STYLE_STROKECOLOR] = '#5d65df';
+			style[mxConstants.STYLE_FILLCOLOR] = '#adc5ff';
+			style[mxConstants.STYLE_FONTCOLOR] = '#1d258f';
+			style[mxConstants.STYLE_FONTFAMILY] = 'Verdana';
+			style[mxConstants.STYLE_FONTSIZE] = '12';
+			style[mxConstants.STYLE_FONTSTYLE] = '1';
+			style[mxConstants.STYLE_ROUNDED] = '1';
+			style[mxConstants.STYLE_IMAGE_WIDTH] = '48';
+			style[mxConstants.STYLE_IMAGE_HEIGHT] = '48';
+			style[mxConstants.STYLE_OPACITY] = '80';
+			graph.getStylesheet().putDefaultVertexStyle(style);*/
+
+			style = new Object();
+			style[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_SWIMLANE;
+			style[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
+			style[mxConstants.STYLE_ALIGN] = mxConstants.ALIGN_CENTER;
+			style[mxConstants.STYLE_VERTICAL_ALIGN] = mxConstants.ALIGN_TOP;
+			style[mxConstants.STYLE_FILLCOLOR] = '#FF9103';
+			style[mxConstants.STYLE_GRADIENTCOLOR] = '#F8C48B';
+			style[mxConstants.STYLE_STROKECOLOR] = '#E86A00';
+			style[mxConstants.STYLE_FONTCOLOR] = '#000000';
+			style[mxConstants.STYLE_ROUNDED] = true;
+			style[mxConstants.STYLE_OPACITY] = '80';
+			style[mxConstants.STYLE_STARTSIZE] = '30';
+			style[mxConstants.STYLE_FONTSIZE] = '16';
+			style[mxConstants.STYLE_FONTSTYLE] = 1;
+			graph.getStylesheet().putCellStyle('group', style);
+
+			style = new Object();
+			style[mxConstants.STYLE_SHAPE] = mxConstants.SHAPE_IMAGE;
+			style[mxConstants.STYLE_FONTCOLOR] = '#774400';
+			style[mxConstants.STYLE_PERIMETER] = mxPerimeter.RectanglePerimeter;
+			style[mxConstants.STYLE_PERIMETER_SPACING] = '6';
+			style[mxConstants.STYLE_ALIGN] = mxConstants.ALIGN_LEFT;
+			style[mxConstants.STYLE_VERTICAL_ALIGN] = mxConstants.ALIGN_MIDDLE;
+			style[mxConstants.STYLE_FONTSIZE] = '10';
+			style[mxConstants.STYLE_FONTSTYLE] = 2;
+			style[mxConstants.STYLE_IMAGE_WIDTH] = '16';
+			style[mxConstants.STYLE_IMAGE_HEIGHT] = '16';
+			graph.getStylesheet().putCellStyle('port', style);
+
+			/*style = graph.getStylesheet().getDefaultEdgeStyle();
+			style[mxConstants.STYLE_LABEL_BACKGROUNDCOLOR] = '#FFFFFF';
+			style[mxConstants.STYLE_STROKEWIDTH] = '2';
+
+			//NOTE: Disabled ElbowConnector Orthogonal style for edges.
+			//style[mxConstants.STYLE_EDGE] = mxEdgeStyle.ElbowConnector;
+			style[mxConstants.STYLE_SOURCE_PERIMETER_SPACING] = -20;
+			style[mxConstants.STYLE_TARGET_PERIMETER_SPACING] = -10;
+			style[mxConstants.STYLE_ENDARROW] = false;*/
+
+
+		};
+
+
+
+	</script>
+
+<!--
+	Overrides methods to preview and create new edges.
+-->
+	<script type="text/javascript">
+		// Sets source terminal point for edge-to-edge connections.
+		mxConnectionHandler.prototype.createEdgeState = function(me)
+		{
+			var edge = this.graph.createEdge();
+
+			if (this.sourceConstraint != null && this.previous != null)
+			{
+				edge.style = mxConstants.STYLE_EXIT_X+'='+this.sourceConstraint.point.x+';'+
+					mxConstants.STYLE_EXIT_Y+'='+this.sourceConstraint.point.y+';';
+			}
+			else if (this.graph.model.isEdge(me.getCell()))
+			{
+				var scale = this.graph.view.scale;
+				var tr = this.graph.view.translate;
+				var pt = new mxPoint(this.graph.snap(me.getGraphX() / scale) - tr.x,
+						this.graph.snap(me.getGraphY() / scale) - tr.y);
+				edge.geometry.setTerminalPoint(pt, true);
+			}
+
+			return this.graph.view.createState(edge);
+		};
+
+		// Uses right mouse button to create edges on background (see also: lines 67 ff)
+		mxConnectionHandler.prototype.isStopEvent = function(me)
+		{
+			return me.getState() != null || mxEvent.isRightMouseButton(me.getEvent());
+		};
+
+		// Updates target terminal point for edge-to-edge connections.
+		mxConnectionHandlerUpdateCurrentState = mxConnectionHandler.prototype.updateCurrentState;
+		mxConnectionHandler.prototype.updateCurrentState = function(me)
+		{
+			mxConnectionHandlerUpdateCurrentState.apply(this, arguments);
+
+			if (this.edgeState != null)
+			{
+				this.edgeState.cell.geometry.setTerminalPoint(null, false);
+
+				if (this.shape != null && this.currentState != null &&
+					this.currentState.view.graph.model.isEdge(this.currentState.cell))
+				{
+					var scale = this.graph.view.scale;
+					var tr = this.graph.view.translate;
+					var pt = new mxPoint(this.graph.snap(me.getGraphX() / scale) - tr.x,
+							this.graph.snap(me.getGraphY() / scale) - tr.y);
+					this.edgeState.cell.geometry.setTerminalPoint(pt, false);
+				}
+			}
+		};
+
+		// Updates the terminal and control points in the cloned preview.
+		mxEdgeSegmentHandler.prototype.clonePreviewState = function(point, terminal)
+		{
+			var clone = mxEdgeHandler.prototype.clonePreviewState.apply(this, arguments);
+			clone.cell = clone.cell.clone();
+
+			if (this.isSource || this.isTarget)
+			{
+				clone.cell.geometry = clone.cell.geometry.clone();
+
+				// Sets the terminal point of an edge if we're moving one of the endpoints
+				if (this.graph.getModel().isEdge(clone.cell))
+				{
+					// TODO: Only set this if the target or source terminal is an edge
+					clone.cell.geometry.setTerminalPoint(point, this.isSource);
+				}
+				else
+				{
+					clone.cell.geometry.setTerminalPoint(null, this.isSource);
+				}
+			}
+
+			return clone;
+		};
+
+		var mxEdgeHandlerConnect = mxEdgeHandler.prototype.connect;
+		mxEdgeHandler.prototype.connect = function(edge, terminal, isSource, isClone, me)
+		{
+			var result = null;
+			var model = this.graph.getModel();
+			var parent = model.getParent(edge);
+
+			model.beginUpdate();
+			try
+			{
+				result = mxEdgeHandlerConnect.apply(this, arguments);
+				var geo = model.getGeometry(result);
+
+				if (geo != null)
+				{
+					geo = geo.clone();
+					var pt = null;
+
+					if (model.isEdge(terminal))
+					{
+						pt = this.abspoints[(this.isSource) ? 0 : this.abspoints.length - 1];
+						pt.x = pt.x / this.graph.view.scale - this.graph.view.translate.x;
+						pt.y = pt.y / this.graph.view.scale - this.graph.view.translate.y;
+
+						var pstate = this.graph.getView().getState(
+								this.graph.getModel().getParent(edge));
+
+						if (pstate != null)
+						{
+							pt.x -= pstate.origin.x;
+							pt.y -= pstate.origin.y;
+						}
+
+						pt.x -= this.graph.panDx / this.graph.view.scale;
+						pt.y -= this.graph.panDy / this.graph.view.scale;
+					}
+
+					geo.setTerminalPoint(pt, isSource);
+					model.setGeometry(edge, geo);
+				}
+			}
+			finally
+			{
+				model.endUpdate();
+			}
+
+			return result;
+		};
+	</script>
+<!--
+	Adds in-place highlighting for complete cell area (no hotspot).
+-->
+	<script type="text/javascript">
+		mxConnectionHandlerCreateMarker = mxConnectionHandler.prototype.createMarker;
+		mxConnectionHandler.prototype.createMarker = function()
+		{
+			var marker = mxConnectionHandlerCreateMarker.apply(this, arguments);
+
+			// Uses complete area of cell for new connections (no hotspot)
+			marker.intersects = function(state, evt)
+			{
+				return true;
+			};
+
+			// Adds in-place highlighting
+			mxCellHighlightHighlight = mxCellHighlight.prototype.highlight;
+			marker.highlight.highlight = function(state)
+			{
+				if (this.state != state)
+				{
+					if (this.state != null)
+					{
+						this.state.style = this.lastStyle;
+
+						// Workaround for shape using current stroke width if no strokewidth defined
+						this.state.style['strokeWidth'] = this.state.style['strokeWidth'] || '1';
+						this.state.style['strokeColor'] = this.state.style['strokeColor'] || 'none';
+
+						if (this.state.shape != null)
+						{
+							this.state.view.graph.cellRenderer.configureShape(this.state);
+							this.state.shape.redraw();
+						}
+					}
+
+					if (state != null)
+					{
+						this.lastStyle = state.style;
+						state.style = mxUtils.clone(state.style);
+						state.style['strokeColor'] = '#00ff00';
+						state.style['strokeWidth'] = '3';
+
+						if (state.shape != null)
+						{
+							state.view.graph.cellRenderer.configureShape(state);
+							state.shape.redraw();
+						}
+					}
+
+					this.state = state;
+				}
+			};
+
+			return marker;
+		};
+
+		mxEdgeHandlerCreateMarker = mxEdgeHandler.prototype.createMarker;
+		mxEdgeHandler.prototype.createMarker = function()
+		{
+			var marker = mxEdgeHandlerCreateMarker.apply(this, arguments);
+
+			// Adds in-place highlighting when reconnecting existing edges
+			marker.highlight.highlight = this.graph.connectionHandler.marker.highlight.highlight;
+
+			return marker;
+		}
+	</script>
+
+
+
+</head>
+
+<!-- Page passes the container for the graph to the program -->
+<body onload="main(document.getElementById('graphContainer'),
+			document.getElementById('outlineContainer'),
+		 	document.getElementById('toolbarContainer'),
+			document.getElementById('sidebarContainer'),
+			document.getElementById('statusContainer'));" style="margin:0px;">
+
+	
+
+	<!-- Creates a container for the sidebar -->
+	<div id="toolbarContainer"
+		style="position:absolute;white-space:nowrap;overflow:hidden;top:0px;left:0px;max-height:24px;height:36px;right:0px;padding:6px;background-color:#039be5;">
+	</div>
+
+	<!-- Creates a container for the toolboox -->
+	<div id="sidebarContainer"
+		style="position:absolute;overflow:hidden;top:36px;left:0px;bottom:36px;max-width:80px;width:80px;padding-top:10px;padding-left:20px;background-color:#039be5;">
+	</div>
+
+	<!-- Creates a container for the graph -->
+	<div id="graphContainer"
+		style="position:absolute;overflow:hidden;top:36px;left:100px;bottom:36px;right:0px;background-image:url('editors/images/grid.gif');cursor:default;">
+	</div>
+
+	<!-- Creates a container for the outline -->
+	<div id="outlineContainer"
+		style="position:absolute;overflow:hidden;top:36px;right:0px;width:200px;height:140px;background:transparent;border-style:solid;border-color:black;">
+	</div>
+
+	<!-- Creates a container for the sidebar -->
+	<div id="statusContainer"
+		style="text-align:right;position:absolute;overflow:hidden;bottom:0px;left:0px;max-height:24px;height:36px;right:0px;color:white;padding:6px;background-color:#039be5;">
+		<div style="font-size:10pt;float:left;">
+			Created with <a href="http://www.jgraph.com" target="_blank">mxGraph</a>
+		</div>
+	</div>
+</body>
+</html>
