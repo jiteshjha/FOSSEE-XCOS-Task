@@ -97,7 +97,7 @@ for storing references to ports.)
 				// windows and the rubberband selection.
 				mxConstants.MIN_HOTSPOT_SIZE = 16;
 				mxConstants.DEFAULT_HOTSPOT = 1;
-				
+
 
 
 
@@ -120,7 +120,7 @@ for storing references to ports.)
 
 				// Add Container to the mxEditor.
 				//editor.setGraphContainer(container);
-				var graph = new mxGraph(container);
+				var graph = editor.graph;
 				var model = graph.getModel();
 				console.log(graph);
 				graph.view.scale = 1;
@@ -1450,7 +1450,7 @@ for storing references to ports.)
 			document.getElementById('sidebarContainer'),
 			document.getElementById('statusContainer'));" style="margin:0px;">
 
-	
+
 
 	<!-- Creates a container for the sidebar -->
 	<div id="toolbarContainer"
